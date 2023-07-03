@@ -63,11 +63,6 @@ interface CreateCollectionParams {
    */
   title: string;
 
-  /** Collection logo. The image will be resized to avatar (40x40) and thumb (180x180) dimensions.
-   * Whitelisted formats are `jpg`, `jpeg`, `gif `and `png`.
-   */
-  logo?: string;
-
   /**
    * Collection's split payment details and rules.
    */
