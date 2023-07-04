@@ -1,4 +1,6 @@
 import fetch, { Response, RequestInit } from 'node-fetch';
+import { FormData } from 'formdata-node';
+import { fileFromPathSync } from 'formdata-node/file-from-path';
 
 export interface APIConfig {
   /**
@@ -41,16 +43,50 @@ export class BaseAPI {
     return params;
   }
 
-  protected async request(method: string, path: string, body: object): Promise<Response> {
+  protected createFormData(body: Record<string, any>): FormData {
+    const form = new FormData();
+    function traverseObject(body: Record<string, any>, prefix = ''): void {
+      for (const [key, value] of Object.entries(body)) {
+        const paramKey = prefix ? `${prefix}[${key}]` : key;
+        if (paramKey === 'photo' || paramKey === 'logo') {
+          form.append(
+            paramKey,
+            fileFromPathSync(value, value, { type: `image/${value.split('.').pop()}` }),
+          );
+        } else if (typeof value === 'object' && !Array.isArray(value)) {
+          traverseObject(value, paramKey);
+        } else {
+          form.append(paramKey, String(value));
+        }
+      }
+    }
+    traverseObject(body);
+    return form;
+  }
+
+  protected async requestURLEncoded(method: string, path: string, body: object): Promise<Response> {
     const url = `${this.apiUrl}${path}`;
     const headers = {
       Authorization: `Basic ${this.apiKey}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
     };
     const options: RequestInit = {
       method,
       headers,
       body: this.createURLSearchParams(body),
+    };
+    const response: Response = await fetch(url, options);
+    return response;
+  }
+
+  protected async requestMultipart(method: string, path: string, body: object): Promise<Response> {
+    const url = `${this.apiUrl}${path}`;
+    const headers = {
+      Authorization: `Basic ${this.apiKey}`,
+    };
+    const options: RequestInit = {
+      method,
+      headers,
+      body: this.createFormData(body),
     };
     const response: Response = await fetch(url, options);
     return response;
