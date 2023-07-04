@@ -26,6 +26,7 @@
     "typescript": "^5.1.5"
   },
   "dependencies": {
+    "formdata-node": "^5.0.1",
     "node-fetch": "^3.3.1"
   }
 }
